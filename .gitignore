@@ -1,0 +1,39 @@
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Builds de Flet / empaquetado
+build/
+dist/
+*.spec
+
+# Secretos y licencias (NUNCA subir)
+.env
+.env.*
+*.lic
+hardware_id.txt
+licensing_tools/
+*.pem
+*.key
+private_key*
+
+# Configuración de herramientas de IA/locales (puede contener claves o rutas personales)
+.codex/
+.claude/settings.local.json
+
+# IDE / SO
+.idea/
+.vscode/
+*.log
+Thumbs.db
+desktop.ini
+.DS_Store

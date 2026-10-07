@@ -1,0 +1,11 @@
+[project]
+name = "protocol-finder"
+version = "1.0.0"
+description = "Buscador y compilador de páginas de escrituras en documentos PDF."
+
+[tool.flet]
+product = "Protocol Finder"
+org = "com.blackbone"
+company = "BlackBone"
+copyright = "© 2026 BlackBone"
+artifact = "ProtocolFinder"
