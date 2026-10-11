@@ -7,7 +7,7 @@ VALID_THEME_MODES = {"Dark", "Light", "System"}
 
 
 def get_app_data_dir() -> str:
-    """Carpeta de datos de la app en AppData (o home como respaldo si APPDATA no existe)."""
+    """App data folder in AppData (falls back to the home directory if APPDATA is not set)."""
     base = os.getenv("APPDATA") or os.path.expanduser("~")
     app_dir = os.path.join(base, APP_NAME)
     os.makedirs(app_dir, exist_ok=True)
@@ -15,7 +15,7 @@ def get_app_data_dir() -> str:
 
 
 def get_pdf_storage_dir() -> str:
-    """Carpeta donde se copian/mueven los PDFs administrados por la app."""
+    """Folder where the PDFs managed by the app are copied/moved."""
     storage_dir = os.path.join(get_app_data_dir(), "pdfs")
     os.makedirs(storage_dir, exist_ok=True)
     return storage_dir
@@ -65,9 +65,9 @@ class AppConfig:
 
     @classmethod
     def load(cls) -> tuple["AppConfig", list[str]]:
-        """Carga la config desde AppData. Nunca lanza: ante cualquier problema recupera
-        valores por defecto y los reporta en la lista de warnings devuelta, para que la
-        capa de UI decida cómo mostrarlos (la config no conoce a Flet)."""
+        """Load the config from AppData. Never raises: on any problem it falls back to
+        default values and reports them in the returned warnings list, so the UI
+        layer decides how to display them (the config knows nothing about Flet)."""
         instance = cls()
         warnings: list[str] = []
         path = _config_file_path()
@@ -101,7 +101,7 @@ class AppConfig:
         return instance, warnings
 
     def save(self) -> str | None:
-        """Guarda la config en AppData. Devuelve un mensaje de error legible, o None si tuvo éxito."""
+        """Save the config to AppData. Returns a readable error message, or None on success."""
         try:
             with open(_config_file_path(), "w", encoding="utf-8") as f:
                 json.dump(self.to_dict(), f, indent=4, ensure_ascii=False)
@@ -115,7 +115,7 @@ _load_warnings: list[str] = []
 
 
 def get_config() -> AppConfig:
-    """Instancia global de configuración, cargada de forma perezosa (no hay I/O al importar este módulo)."""
+    """Global config instance, loaded lazily (no I/O when this module is imported)."""
     global _instance, _load_warnings
     if _instance is None:
         _instance, _load_warnings = AppConfig.load()
@@ -123,7 +123,7 @@ def get_config() -> AppConfig:
 
 
 def pop_load_warnings() -> list[str]:
-    """Devuelve y limpia los warnings generados al cargar la config, para mostrarlos una sola vez en la UI."""
+    """Return and clear the warnings generated while loading the config, so the UI shows them only once."""
     global _load_warnings
     warnings, _load_warnings = _load_warnings, []
     return warnings

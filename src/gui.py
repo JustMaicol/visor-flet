@@ -27,8 +27,8 @@ APP_LOGO_PATH = "protocolFinderLogo.png"
 
 
 def _app_logo_icon(size: int = 18) -> ft.Image:
-    """Logo de la app (fondo azul, letras blancas): tiene su propio color fijo,
-    así que se muestra tal cual, sin reteñido por tema."""
+    """App logo (blue background, white letters): it has its own fixed color,
+    so it is shown as-is, without theme tinting."""
     return ft.Image(
         src=APP_LOGO_PATH,
         width=size,
@@ -78,7 +78,7 @@ class ProtocolFinderApp:
         self._show_startup_warnings()
 
     # ------------------------------------------------------------
-    # Construcción de controles
+    # Control construction
     # ------------------------------------------------------------
     def _build_pickers(self):
         self.file_picker_import = ft.FilePicker()
@@ -86,9 +86,9 @@ class ProtocolFinderApp:
         self.page.services.extend([self.file_picker_import, self.file_picker_save])
 
     def _build_title_bar(self):
-        """Barra de título personalizada: reemplaza el appbar nativo de Windows,
-        fusionando ícono + título + selector de modo + ajustes + botones de
-        minimizar/maximizar/cerrar en una sola franja arrastrable."""
+        """Custom title bar: replaces the native Windows appbar, merging
+        icon + title + mode selector + settings + minimize/maximize/close
+        buttons into a single draggable strip."""
         self.page.window.title_bar_hidden = True
 
         self.minimize_button = ft.IconButton(
@@ -525,7 +525,7 @@ class ProtocolFinderApp:
         )
 
     # ------------------------------------------------------------
-    # Helpers de UI
+    # UI helpers
     # ------------------------------------------------------------
     def _show_snack(self, message: str):
         self.page.show_dialog(ft.SnackBar(content=ft.Text(message)))
@@ -548,7 +548,7 @@ class ProtocolFinderApp:
         return letters or numbers
 
     # ------------------------------------------------------------
-    # Modo de búsqueda (individual / lote)
+    # Search mode (single / batch)
     # ------------------------------------------------------------
     def _on_mode_change(self, e: ft.ControlEvent):
         selected = e.control.selected
@@ -604,7 +604,7 @@ class ProtocolFinderApp:
         self.batch_chips_row.update()
 
     # ------------------------------------------------------------
-    # Carga de PDFs a la biblioteca de la app
+    # Loading PDFs into the app library
     # ------------------------------------------------------------
     async def _on_click_upload(self, e):
         files = await self.file_picker_import.pick_files(
@@ -638,7 +638,7 @@ class ProtocolFinderApp:
             self._show_snack("\n".join(parts))
 
     # ------------------------------------------------------------
-    # Búsqueda
+    # Search
     # ------------------------------------------------------------
     def _on_click_search(self, e):
         if self.is_searching:
@@ -778,7 +778,7 @@ class ProtocolFinderApp:
             self._show_snack("\n".join(parts))
 
     # ------------------------------------------------------------
-    # Resultados: filas, selección y apertura externa
+    # Results: rows, selection and external opening
     # ------------------------------------------------------------
     def _build_result_row(self, row: ResultRow) -> ft.Control:
         is_active = row.id == self.active_result_id
@@ -857,7 +857,7 @@ class ProtocolFinderApp:
             self._show_snack(f"No se pudo abrir el archivo:\n{e}")
 
     # ------------------------------------------------------------
-    # Vista previa
+    # Preview
     # ------------------------------------------------------------
     def _on_select_result(self, result_id: int):
         self.active_result_id = result_id
@@ -893,7 +893,7 @@ class ProtocolFinderApp:
         self.preview_area.update()
 
     # ------------------------------------------------------------
-    # Configuración de la región de corte
+    # Crop region settings
     # ------------------------------------------------------------
     def _open_settings_dialog(self, e):
         self.settings_x0.value = str(self.config.crop_x0)
@@ -936,7 +936,7 @@ class ProtocolFinderApp:
         self._show_snack(error if error else "Región de corte actualizada.")
 
     # ------------------------------------------------------------
-    # Compilación del PDF final
+    # Final PDF compilation
     # ------------------------------------------------------------
     async def _on_click_compile(self, e):
         if not self.selected_ids:
@@ -1198,13 +1198,13 @@ def main(page: ft.Page):
     page.window.height = 800
     page.window.min_width = 1100
     page.window.min_height = 650
-    # Requiere ruta absoluta: una ruta relativa tipo "icon.ico" hace que el cliente de
-    # escritorio no encuentre el archivo y la app se cierre sola sin ningún error visible.
-    # No se puede derivar de __file__: en el .exe empaquetado el código no vive en
-    # archivos .py sueltos, así que esa ruta apunta a un lugar inexistente. En cambio,
-    # tanto en desarrollo (venv/Scripts/python.exe) como en el build empaquetado
-    # (app/venv/Scripts/python.exe) la carpeta "assets" está siempre tres niveles
-    # arriba del intérprete en uso.
+    # Requires an absolute path: a relative path like "icon.ico" makes the desktop
+    # client fail to find the file and the app closes by itself with no visible error.
+    # It cannot be derived from __file__: in the packaged .exe the code does not live in
+    # loose .py files, so that path points to a nonexistent location. Instead, both in
+    # development (venv/Scripts/python.exe) and in the packaged build
+    # (app/venv/Scripts/python.exe) the "assets" folder is always three levels
+    # above the interpreter in use.
     app_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(sys.executable))))
     page.window.icon = os.path.join(app_root, "assets", "icon.ico")
 

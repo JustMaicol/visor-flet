@@ -1,20 +1,20 @@
 """
-Activación por huella de hardware (sin login, sin claves que el usuario escriba).
+Hardware-fingerprint activation (no login, no keys for the user to type).
 
-Flujo:
-    1. `licensing_tools/generate_keys.py` genera un par de claves Ed25519 (se corre
-       UNA sola vez, en la PC del vendedor). La clave privada NUNCA viaja con la app;
-       la clave pública se pega en PUBLIC_KEY_B64 más abajo y se compila dentro del .exe.
-    2. Al instalar en la PC de un cliente, si no hay licencia válida, la app escribe
-       silenciosamente su huella de hardware en un archivo (`hardware_id.txt`) dentro
-       de su carpeta de licencia en AppData, y la muestra en pantalla para copiarla.
-    3. El vendedor lleva esa huella a su propia PC y corre
-       `licensing_tools/generate_license.py` para firmarla con la clave privada,
-       generando `license.lic`.
-    4. El vendedor copia `license.lic` a la misma carpeta de licencia en la PC del
-       cliente. Desde ese momento la app arranca normalmente: en cada inicio vuelve a
-       calcular la huella actual y verifica la firma con la clave pública, sin
-       necesidad de internet ni de ningún dato escrito por el usuario.
+Flow:
+    1. `licensing_tools/generate_keys.py` generates an Ed25519 key pair (run it
+       ONCE, on the seller's PC). The private key NEVER ships with the app;
+       the public key is pasted into PUBLIC_KEY_B64 below and compiled into the .exe.
+    2. When installed on a customer's PC with no valid license, the app silently
+       writes its hardware fingerprint to a file (`hardware_id.txt`) inside its
+       license folder in AppData, and shows it on screen so it can be copied.
+    3. The seller takes that fingerprint to their own PC and runs
+       `licensing_tools/generate_license.py` to sign it with the private key,
+       producing `license.lic`.
+    4. The seller copies `license.lic` into the same license folder on the
+       customer's PC. From then on the app starts normally: on every launch it
+       recomputes the current fingerprint and verifies the signature with the
+       public key, with no internet connection and no user-entered data needed.
 """
 
 import base64
@@ -30,9 +30,9 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 from src.config import get_app_data_dir
 
-# Pegar aquí la clave pública (base64) impresa por licensing_tools/generate_keys.py.
-# Mientras esté vacía, la app se considera "sin sistema de licencias" y arranca libre
-# (útil en desarrollo, antes de generar el primer par de claves).
+# Paste the public key (base64) printed by licensing_tools/generate_keys.py here.
+# While empty, the app is considered to have "no licensing system" and starts freely
+# (useful in development, before the first key pair is generated).
 PUBLIC_KEY_B64 = "5UrMXX/OQm0zB5B6Cq6he53AxWWLKSjpLpbpX0e+wt4="
 
 LICENSE_FOLDER_NAME = "licencia"
@@ -80,8 +80,8 @@ def _system_volume_serial() -> str:
 
 
 def get_hardware_id() -> str:
-    """Huella estable del equipo (no cambia entre reinicios ni reinstalaciones de la
-    app, sí cambia si se formatea o se pasa a otra PC)."""
+    """Stable machine fingerprint (does not change across reboots or app
+    reinstalls; it does change if the machine is reformatted or the app moves to another PC)."""
     parts = [
         _windows_machine_guid(),
         _system_volume_serial(),
@@ -93,8 +93,8 @@ def get_hardware_id() -> str:
 
 
 def export_hardware_id_file() -> str:
-    """Escribe la huella de este equipo en AppData y devuelve la ruta del archivo,
-    para que el vendedor la copie/lea al instalar."""
+    """Write this machine's fingerprint to AppData and return the file path,
+    so the seller can copy/read it during installation."""
     hardware_id = get_hardware_id()
     path = get_hardware_id_path()
     with open(path, "w", encoding="utf-8") as f:
@@ -103,13 +103,13 @@ def export_hardware_id_file() -> str:
 
 
 def check_license() -> tuple[bool, str]:
-    """Verifica la licencia de este equipo.
+    """Verify this machine's license.
 
-    Devuelve (True, huella) si es válida, o (False, mensaje) si falta, está
-    corrupta, no corresponde a este equipo o su firma no es válida.
+    Returns (True, fingerprint) if valid, or (False, message) if it is missing,
+    corrupt, belongs to a different machine, or has an invalid signature.
     """
     if not PUBLIC_KEY_B64:
-        # Sin clave pública configurada todavía: no hay sistema de licencias activo.
+        # No public key configured yet: the licensing system is not active.
         return True, get_hardware_id()
 
     hardware_id = get_hardware_id()
@@ -143,15 +143,15 @@ def check_license() -> tuple[bool, str]:
 
 
 def install_license_file(source_path: str) -> tuple[bool, str]:
-    """Instala un archivo de licencia elegido por el usuario (botón "buscar
-    archivo" o arrastrado a la zona de carga en la pantalla de activación).
+    """Install a license file chosen by the user (via the "browse file" button
+    or dragged onto the drop zone on the activation screen).
 
-    Solo copia el archivo a la carpeta de licencia si se llama exactamente
-    LICENSE_FILENAME; cualquier otro nombre se rechaza sin moverlo a ningún
-    lado. Tras copiarlo, valida la firma con check_license() y si no es
-    válida borra la copia para no dejar un license.lic corrupto instalado.
+    Only copies the file into the license folder if it is named exactly
+    LICENSE_FILENAME; any other name is rejected without moving it anywhere.
+    After copying, validates the signature with check_license() and, if it is
+    not valid, deletes the copy so no corrupt license.lic is left installed.
 
-    Devuelve (True, mensaje de éxito) o (False, mensaje de error).
+    Returns (True, success message) or (False, error message).
     """
     filename = os.path.basename(source_path)
     if filename != LICENSE_FILENAME:

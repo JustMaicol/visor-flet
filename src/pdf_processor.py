@@ -23,9 +23,9 @@ DEFAULT_MAX_WORKERS = min(8, (os.cpu_count() or 4) + 2)
 
 def extract_codes_from_text(text: str) -> tuple[str | None, str | None]:
     """
-    Analiza el texto de una región e intenta extraer el código de letras y el código numérico.
-    1. Coexistencia en la misma línea de texto (prioritaria).
-    2. Extracción regional de candidatos independientes (apoyo para formatos multilínea).
+    Analyze the text of a region and try to extract the letter code and the numeric code.
+    1. Both appearing on the same line of text (takes priority).
+    2. Regional extraction of independent candidates (fallback for multi-line formats).
     """
     text_clean = text.strip()
     if not text_clean:
@@ -94,7 +94,7 @@ def _find_pdf_files(directory: str) -> list[str]:
 
 
 def list_pdf_files(directory: str) -> list[str]:
-    """Lista las rutas de los PDFs administrados por la app, ordenadas por nombre."""
+    """List the paths of the PDFs managed by the app, sorted by name."""
     return sorted(_find_pdf_files(directory), key=lambda p: os.path.basename(p).lower())
 
 
@@ -106,7 +106,7 @@ def _search_single_pdf(
     cancel_event,
     error_callback,
 ) -> None:
-    """Analiza las páginas impares (frentes) de un único PDF contra todos los criterios activos."""
+    """Analyze the odd pages (fronts) of a single PDF against all active criteria."""
     try:
         with fitz.open(filepath) as doc:
             for page_idx in range(0, doc.page_count, 2):
@@ -128,7 +128,7 @@ def _search_single_pdf(
                                 detected_numbers=det_numbers or "N/D",
                                 criterio=criterion.label,
                             )
-                        # Un archivo/página ya asignado a un criterio no necesita evaluar el resto.
+                        # A file/page already matched to a criterion does not need to check the rest.
                         break
     except Exception as e:
         if error_callback:
@@ -148,20 +148,20 @@ def search_pdfs_in_directory(
     max_workers=DEFAULT_MAX_WORKERS,
 ):
     """
-    Busca archivos PDF en el directorio (recursivo), analizando solo las páginas impares
-    (frentes) de cada uno. Procesa varios PDFs en paralelo con un pool de hilos, ya que cada
-    archivo es independiente y la mayor parte del tiempo se pasa en I/O de disco / MuPDF.
+    Search for PDF files in the directory (recursively), analyzing only the odd pages
+    (fronts) of each one. Processes several PDFs in parallel with a thread pool, since each
+    file is independent and most of the time is spent on disk I/O / MuPDF.
 
-    Soporta dos modos:
-    - Búsqueda única: usa search_letters y search_numbers (si search_pairs está vacío).
-    - Búsqueda por lote: usa search_pairs = [(letters, numbers, criterio_label), ...].
-      Cada página se evalúa contra todos los criterios; se reporta el primero que coincida.
+    Supports two modes:
+    - Single search: uses search_letters and search_numbers (if search_pairs is empty).
+    - Batch search: uses search_pairs = [(letters, numbers, criterion_label), ...].
+      Each page is checked against all criteria; the first match is reported.
 
-    crop_coords: tupla (x0, y0, width, height)
-    progress_callback: funcion(archivos_completados, total_archivos, nombre_archivo)
-    result_callback: funcion(filepath, page_num, detected_letters, detected_numbers, criterio)
-    error_callback: funcion(filepath, mensaje) para archivos que no se pudieron procesar
-    cancel_event: threading.Event para cancelar la búsqueda
+    crop_coords: tuple (x0, y0, width, height)
+    progress_callback: function(completed_files, total_files, file_name)
+    result_callback: function(filepath, page_num, detected_letters, detected_numbers, criterion)
+    error_callback: function(filepath, message) for files that could not be processed
+    cancel_event: threading.Event to cancel the search
     """
     x0, y0, width, height = crop_coords
     rect = fitz.Rect(x0, y0, x0 + width, y0 + height)
@@ -197,25 +197,25 @@ def search_pdfs_in_directory(
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = [executor.submit(process, filepath) for filepath in pdf_files]
-        # Cada tarea revisa cancel_event al iniciar, así que una cancelación se propaga
-        # rápido sin necesidad de cancelar futuros ya encolados.
+        # Each task checks cancel_event on start, so a cancellation propagates
+        # quickly without needing to cancel futures that are already queued.
         for future in concurrent.futures.as_completed(futures):
             future.result()
 
 
 def compile_pdf_from_results(selected_items, output_filepath, error_callback=None) -> int:
     """
-    Compila un PDF consolidado con las hojas seleccionadas. Cada elemento seleccionado es
-    una página impar (frente); se incluye junto con la página par siguiente (el reverso),
-    ej. si la página elegida es la 17, se incluyen la 17 y la 18. Si no existe una página
-    siguiente, se incluye solo la seleccionada.
+    Compile a consolidated PDF from the selected sheets. Each selected item is an
+    odd page (front); it is included together with the next even page (the back),
+    e.g. if the chosen page is 17, pages 17 and 18 are included. If there is no
+    next page, only the selected one is included.
 
-    Los archivos/páginas que fallen se reportan vía error_callback y se omiten, en vez de
-    abortar toda la compilación.
+    Files/pages that fail are reported via error_callback and skipped, instead of
+    aborting the whole compilation.
 
-    selected_items: lista de diccionarios [{"filepath": str, "page_num": int}]
-    output_filepath: ruta de destino del PDF consolidado
-    Devuelve la cantidad de elementos incluidos con éxito.
+    selected_items: list of dicts [{"filepath": str, "page_num": int}]
+    output_filepath: destination path of the consolidated PDF
+    Returns the number of items successfully included.
     """
     included = 0
 
@@ -265,10 +265,10 @@ def _unique_destination_path(storage_dir: str, filename: str) -> str:
 
 def import_pdf_to_storage(source_path: str, storage_dir: str) -> tuple[str | None, str | None]:
     """
-    Copia un PDF externo a la carpeta de almacenamiento propia de la app (usada por el botón
-    "Cargar PDF" de la interfaz), sin sobreescribir archivos existentes con el mismo nombre.
+    Copy an external PDF into the app's own storage folder (used by the UI's
+    "Load PDF" button), without overwriting existing files with the same name.
 
-    Devuelve (ruta_destino, None) si tuvo éxito, o (None, mensaje_error) legible para la UI.
+    Returns (destination_path, None) on success, or (None, error_message) readable by the UI.
     """
     if not os.path.isfile(source_path):
         return None, "El archivo seleccionado no existe."
@@ -294,10 +294,10 @@ def import_pdf_to_storage(source_path: str, storage_dir: str) -> tuple[str | Non
 
 def delete_pdf_file(filepath: str) -> str | None:
     """
-    Elimina un PDF de la carpeta de almacenamiento de la app (usado por el botón
-    de eliminar en la lista de "PDFs cargados" de configuración).
+    Delete a PDF from the app's storage folder (used by the delete button
+    in the settings "Loaded PDFs" list).
 
-    Devuelve None si tuvo éxito, o un mensaje de error legible para la UI.
+    Returns None on success, or an error message readable by the UI.
     """
     try:
         os.remove(filepath)
@@ -313,11 +313,11 @@ def render_page_preview(
     dpi: int = 120,
 ) -> tuple[bytes | None, str, str | None]:
     """
-    Renderiza una página de PDF a PNG (con la región de corte marcada en rojo) y devuelve
-    también el texto extraído de esa región. Pensado para el panel de vista previa de la UI.
+    Render a PDF page to PNG (with the crop region outlined in red) and also return
+    the text extracted from that region. Intended for the UI's preview panel.
 
-    Devuelve (png_bytes, texto_extraido, error). En caso de error, png_bytes es None y
-    texto_extraido es "".
+    Returns (png_bytes, extracted_text, error). On error, png_bytes is None and
+    extracted_text is "".
     """
     x0, y0, width, height = crop_coords
     rect = fitz.Rect(x0, y0, x0 + width, y0 + height)

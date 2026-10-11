@@ -1,7 +1,7 @@
 [project]
 name = "protocol-finder"
 version = "1.0.0"
-description = "Buscador y compilador de páginas de escrituras en documentos PDF."
+description = "Search and compile deed pages in PDF documents."
 
 [tool.flet]
 product = "Protocol Finder"

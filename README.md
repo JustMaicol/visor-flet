@@ -1,17 +1,17 @@
 # Protocol Finder
 
-Buscador y compilador de páginas de escrituras en documentos PDF. Aplicación de escritorio hecha con [Flet](https://flet.dev) (Python) y PyMuPDF.
+Search and compile deed pages in PDF documents. Desktop app built with [Flet](https://flet.dev) (Python) and PyMuPDF.
 
-## Requisitos
+## Requirements
 
 - Windows 10/11
-- Python 3.12 o superior (desarrollado con 3.14)
+- Python 3.12 or newer (developed with 3.14)
 - Git
 
-## Instalación
+## Installation
 
 ```powershell
-git clone <URL-DEL-REPOSITORIO>
+git clone <REPOSITORY-URL>
 cd visor-flet
 
 python -m venv venv
@@ -20,38 +20,38 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-## Ejecución
+## Running
 
 ```powershell
 python main.py
 ```
 
-## Empaquetar como .exe
+## Building a Windows executable
 
-La configuración del producto está en `pyproject.toml` (`[tool.flet]`).
+Product settings live in `pyproject.toml` (`[tool.flet]`).
 
 ```powershell
 flet build windows
 ```
 
-El resultado queda en la carpeta `build/`.
+The output is placed in the `build/` folder.
 
-## Estructura
+## Project structure
 
 ```
-main.py              Punto de entrada
-src/gui.py           Interfaz (Flet)
-src/pdf_processor.py Búsqueda y compilación de PDFs (PyMuPDF)
-src/config.py        Configuración del usuario (AppData)
-src/licensing.py     Activación por huella de hardware (Ed25519)
-assets/              Iconos y fuentes
+main.py              Entry point
+src/gui.py           User interface (Flet)
+src/pdf_processor.py PDF search and compilation (PyMuPDF)
+src/config.py        User settings (AppData)
+src/licensing.py     Hardware-fingerprint activation (Ed25519)
+assets/              Icons and fonts
 ```
 
-## Datos y licencia de uso
+## Data and activation
 
-La app guarda su configuración y los PDFs administrados en `%APPDATA%\ProtocolFinder`.
-La activación usa una huella de hardware firmada con una clave privada que **no** está en este repositorio.
+The app stores its settings and managed PDFs in `%APPDATA%\ProtocolFinder`.
+Activation uses a hardware fingerprint signed with a private key that is **not** included in this repository.
 
-## Licencia
+## License
 
-Copyright (c) 2026 visor flet. Licenciado bajo PolyForm Strict 1.0.0; ver el archivo `LICENSE`.
+Copyright (c) 2026 visor flet. Licensed under PolyForm Strict 1.0.0; see the `LICENSE` file.
